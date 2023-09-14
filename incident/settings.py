@@ -123,6 +123,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:3000',  # Replace with the actual frontend URL
+    'https://incident-report.vercel.app'
 
 ]
 
