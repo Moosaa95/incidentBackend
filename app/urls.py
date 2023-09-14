@@ -5,7 +5,8 @@ from app.views import (IncidentListCreateView, IncidentRetrieveUpdateDestroyView
                         UserRegistrationAPIView,UserLoginAPIView, 
                         CustomTokenObtainPairView, ReportListCreateView,
                           ReportDetailView, DashboardAPIView,
-                          CustomUserListCreateView
+                          CustomUserListCreateView, UserProfileEditView,
+                          ChangePasswordView, GetUserDetailByEmailView
                     )
 
 urlpatterns = [
@@ -21,4 +22,8 @@ urlpatterns = [
     path('reports/', ReportListCreateView.as_view(), name='report-list-create'),
     path('reports/<int:pk>/', ReportDetailView.as_view(), name='report-detail'),
     path('dashboard/', DashboardAPIView.as_view(), name='dashboard'),
+    path('edit-profile/', UserProfileEditView.as_view(), name='edit-profile'),
+    path('change-password/', ChangePasswordView.as_view(), name='change-password'),
+    path('get-user-detail/', GetUserDetailByEmailView.as_view(), name='get-user-name-by-email'),
+
 ]

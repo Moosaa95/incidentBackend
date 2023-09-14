@@ -11,10 +11,11 @@ from rest_framework.response import Response
 from rest_framework import status, generics
 from django.contrib.auth import get_user_model
 from .dashboard import Dashboard
-
+from django.contrib.auth import update_session_auth_hash
 from .models import Incident, Location, Report, CustomUser
-from .serializers import CustomTokenObtainPairSerializer, CustomUserSerializer, IncidentSerializer, LocationSerializer, UserLoginSerializer, ReportSerializer
+from .serializers import CustomTokenObtainPairSerializer, CustomUserSerializer, IncidentSerializer, LocationSerializer, UserLoginSerializer, ReportSerializer, UserProfileEditSerializer, ChangePasswordSerializer
 from django.contrib.auth import authenticate, login
+from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.views import TokenObtainPairView
 
 class UserRegistrationAPIView(APIView):
@@ -115,3 +116,92 @@ class DashboardAPIView(APIView):
 class CustomUserListCreateView(generics.ListCreateAPIView):
     queryset = CustomUser.objects.all()
     serializer_class = CustomUserSerializer
+
+
+class UserProfileEditView(generics.UpdateAPIView):
+    queryset = CustomUser.objects.all()
+    serializer_class = UserProfileEditSerializer
+    # permission_classes = [IsAuthenticated]
+
+    def get_object(self):
+        return self.request.user
+
+
+# class ChangePasswordView(generics.UpdateAPIView):
+#     serializer_class = ChangePasswordSerializer
+#     model = CustomUser
+#     # permission_classes = [IsAuthenticated]
+
+#     def get_object(self, queryset=None):
+#         return self.request.user
+
+#     def update(self, request, *args, **kwargs):
+#         self.object = self.get_object()
+#         serializer = self.get_serializer(data=request.data)
+#         print(serializer, 'serial')
+
+#         if serializer.is_valid():
+#             old_password = serializer.data.get("old_password")
+#             new_password = serializer.data.get("new_password")
+            
+#             # Check the old password
+#             if not self.object.check_password(old_password):
+#                 return Response({"old_password": ["Wrong password."]}, status=status.HTTP_400_BAD_REQUEST)
+            
+#             # Change the password
+#             self.object.set_password(new_password)
+#             self.object.save()
+#             update_session_auth_hash(request, self.object)  # Important for maintaining the user's session
+            
+#             return Response({"detail": "Password changed successfully."}, status=status.HTTP_200_OK)
+
+#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ChangePasswordView(generics.UpdateAPIView):
+    serializer_class = ChangePasswordSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self):
+        return self.request.user
+
+    def update(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        serializer = self.get_serializer(data=request.data)
+
+        if serializer.is_valid():
+            old_password = serializer.data.get("old_password")
+            new_password = serializer.data.get("new_password")
+            
+            # Check the old password
+            if not self.object.check_password(old_password):
+                return Response({"old_password": ["Wrong password."]}, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Change the password
+            self.object.set_password(new_password)
+            self.object.save()
+            update_session_auth_hash(request, self.object)  # Important for maintaining the user's session
+            
+            return Response({"detail": "Password changed successfully."}, status=status.HTTP_200_OK)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class GetUserDetailByEmailView(APIView):
+    def get(self, request):
+        # Get the email from the query parameters
+        email = request.query_params.get('user_id')
+        print(email, 'email id')
+
+        if not email:
+            return Response({'error': 'Email is required as a query parameter.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            # Try to find a user with the provided email
+            user = CustomUser.objects.get(id=email)
+            print(user, 'before')
+            serializer = CustomUserSerializer(user)  # Serialize the user data
+            print('after', serializer)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except CustomUser.DoesNotExist:
+            return Response({'error': 'User not found for the provided email.'}, status=status.HTTP_404_NOT_FOUND)

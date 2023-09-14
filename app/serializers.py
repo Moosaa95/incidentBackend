@@ -66,3 +66,14 @@ class ReportSerializer(serializers.ModelSerializer):
     class Meta:
         model = Report
         fields = '__all__' 
+
+
+class UserProfileEditSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = get_user_model()
+        fields = ['first_name', 'last_name',  'address']
+
+
+class ChangePasswordSerializer(serializers.Serializer):
+    old_password = serializers.CharField(required=True)
+    new_password = serializers.CharField(required=True)
